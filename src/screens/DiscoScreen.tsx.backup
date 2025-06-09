@@ -1,0 +1,525 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  Dimensions,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import LottieView from 'lottie-react-native';
+
+import SafeAreaView from '../components/SafeAreaView';
+import { FONTS } from '../constants';
+import { RootStackParamList } from '../navigation/types';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+const dscvrColors = {
+  electricMagenta: '#E500A4',
+  vividBlue: '#375BDD',
+  royalPurple: '#6D4DAD',
+  seafoamTeal: '#66B8BC',
+  midnightNavy: '#0D2D4F',
+  pureWhite: '#FFFFFF',
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+interface Filter {
+  id: string;
+  title: string;
+  icon: string;
+  options: string[];
+  locked: boolean;
+  selected?: string;
+}
+
+export default function DiscoScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const [filters, setFilters] = useState<Filter[]>([
+    {
+      id: 'venue',
+      title: 'Venue Type',
+      icon: 'business-outline',
+      options: ['Café', 'Bar', 'Restaurant', 'Live Event', 'Club'],
+      locked: false,
+    },
+    {
+      id: 'cuisine',
+      title: 'Cuisine',
+      icon: 'restaurant-outline',
+      options: ['Mexican', 'Sushi', 'Italian', 'American', 'Thai', 'Vegan'],
+      locked: false,
+    },
+    {
+      id: 'distance',
+      title: 'Distance',
+      icon: 'location-outline',
+      options: ['< 1 mile', '< 2 miles', '< 5 miles', '< 10 miles'],
+      locked: false,
+    },
+    {
+      id: 'price',
+      title: 'Price Range',
+      icon: 'cash-outline',
+      options: ['$', '$$', '$$$', '$$$$'],
+      locked: false,
+    },
+    {
+      id: 'special',
+      title: 'Special Mode',
+      icon: 'sparkles-outline',
+      options: ['Friends Picks', 'Trending Now', 'Hidden Gems', 'New Spots'],
+      locked: false,
+    },
+  ]);
+
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<any>(null);
+  const spinAnimation = new Animated.Value(0);
+
+  const toggleFilterLock = (filterId: string) => {
+    setFilters(filters.map(filter => 
+      filter.id === filterId 
+        ? { ...filter, locked: !filter.locked }
+        : filter
+    ));
+  };
+
+  const selectFilterOption = (filterId: string, option: string) => {
+    setFilters(filters.map(filter => 
+      filter.id === filterId 
+        ? { ...filter, selected: option, locked: true }
+        : filter
+    ));
+  };
+
+  const resetFilters = () => {
+    setFilters(filters.map(filter => ({
+      ...filter,
+      locked: false,
+      selected: undefined,
+    })));
+    setSelectedVenue(null);
+  };
+
+  const spinTheWheel = () => {
+    setIsSpinning(true);
+    
+    // Animate spin
+    Animated.timing(spinAnimation, {
+      toValue: 1,
+      duration: 2000,
+      useNativeDriver: true,
+    }).start(() => {
+      // Mock result
+      setSelectedVenue({
+        name: "The Secret Garden",
+        category: "Speakeasy Bar",
+        rating: 4.7,
+        distance: "1.2 miles",
+        description: "Hidden cocktail bar with live jazz",
+        place_id: "sample_disco_result",
+      });
+      setIsSpinning(false);
+      spinAnimation.setValue(0);
+    });
+  };
+
+  const renderFilter = (filter: Filter) => (
+    <View key={filter.id} style={styles.filterCard}>
+      <View style={styles.filterHeader}>
+        <View style={styles.filterTitleContainer}>
+          <Ionicons name={filter.icon as any} size={20} color={dscvrColors.royalPurple} />
+          <Text style={styles.filterTitle}>{filter.title}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => toggleFilterLock(filter.id)}
+          style={[styles.lockButton, filter.locked && styles.lockButtonActive]}
+        >
+          <Ionicons 
+            name={filter.locked ? "lock-closed" : "lock-open"} 
+            size={20} 
+            color={filter.locked ? dscvrColors.electricMagenta : '#999'} 
+          />
+        </TouchableOpacity>
+      </View>
+
+      {filter.locked && !filter.selected && (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.optionsScroll}
+        >
+          {filter.options.map((option) => (
+            <TouchableOpacity
+              key={option}
+              style={styles.optionButton}
+              onPress={() => selectFilterOption(filter.id, option)}
+            >
+              <Text style={styles.optionText}>{option}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+
+      {filter.selected && (
+        <View style={styles.selectedOption}>
+          <Text style={styles.selectedOptionText}>{filter.selected}</Text>
+          <TouchableOpacity onPress={() => selectFilterOption(filter.id, '')}>
+            <Ionicons name="close-circle" size={20} color={dscvrColors.electricMagenta} />
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color={dscvrColors.midnightNavy} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Adventure Mode 🎲</Text>
+        <TouchableOpacity onPress={resetFilters}>
+          <Text style={styles.resetText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Instructions */}
+        <View style={styles.instructionsCard}>
+          <Text style={styles.instructionsTitle}>Let fate decide! 🎰</Text>
+          <Text style={styles.instructionsText}>
+            Lock in what matters, leave the rest to chance. 
+            Shake or tap to discover your next adventure!
+          </Text>
+        </View>
+
+        {/* Filters */}
+        <View style={styles.filtersContainer}>
+          {filters.map(renderFilter)}
+        </View>
+
+        {/* Spin Button */}
+        <TouchableOpacity
+          style={[styles.spinButton, isSpinning && styles.spinButtonDisabled]}
+          onPress={spinTheWheel}
+          disabled={isSpinning}
+        >
+          <Animated.View
+            style={{
+              transform: [
+                {
+                  rotate: spinAnimation.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '720deg'],
+                  }),
+                },
+              ],
+            }}
+          >
+            <Ionicons 
+              name="dice-outline" 
+              size={32} 
+              color={dscvrColors.pureWhite} 
+            />
+          </Animated.View>
+          <Text style={styles.spinButtonText}>
+            {isSpinning ? 'Finding your adventure...' : 'Spin the Wheel!'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Result */}
+        {selectedVenue && (
+          <View style={styles.resultCard}>
+            <View style={styles.resultHeader}>
+              <Ionicons name="sparkles" size={24} color={dscvrColors.electricMagenta} />
+              <Text style={styles.resultTitle}>Your Adventure Awaits!</Text>
+            </View>
+
+            <Text style={styles.venueName}>{selectedVenue.name}</Text>
+            <Text style={styles.venueCategory}>{selectedVenue.category}</Text>
+            
+            <View style={styles.venueDetails}>
+              <View style={styles.detailItem}>
+                <Ionicons name="star" size={16} color={dscvrColors.electricMagenta} />
+                <Text style={styles.detailText}>{selectedVenue.rating}</Text>
+              </View>
+              <View style={styles.detailItem}>
+                <Ionicons name="location" size={16} color={dscvrColors.vividBlue} />
+                <Text style={styles.detailText}>{selectedVenue.distance}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.venueDescription}>{selectedVenue.description}</Text>
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={styles.visitButton}
+                onPress={() => navigation.navigate('PlaceDetail', { placeId: selectedVenue.place_id })}
+              >
+                <Text style={styles.visitButtonText}>Visit Now</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.shareButton}>
+                <Ionicons name="share-social-outline" size={20} color={dscvrColors.electricMagenta} />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.saveButton}>
+                <Ionicons name="bookmark-outline" size={20} color={dscvrColors.electricMagenta} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.tryAgainButton}
+              onPress={spinTheWheel}
+            >
+              <Text style={styles.tryAgainText}>Try Another Adventure</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: dscvrColors.pureWhite,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.bold,
+    color: dscvrColors.midnightNavy,
+  },
+  resetText: {
+    fontSize: 16,
+    color: dscvrColors.electricMagenta,
+    fontFamily: FONTS.medium,
+  },
+  instructionsCard: {
+    backgroundColor: dscvrColors.royalPurple,
+    margin: 20,
+    padding: 20,
+    borderRadius: 16,
+  },
+  instructionsTitle: {
+    fontSize: 20,
+    fontFamily: FONTS.bold,
+    color: dscvrColors.pureWhite,
+    marginBottom: 8,
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: dscvrColors.pureWhite,
+    opacity: 0.9,
+    lineHeight: 20,
+  },
+  filtersContainer: {
+    paddingHorizontal: 20,
+  },
+  filterCard: {
+    backgroundColor: dscvrColors.pureWhite,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  filterTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: dscvrColors.midnightNavy,
+  },
+  lockButton: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 18,
+  },
+  lockButtonActive: {
+    backgroundColor: dscvrColors.electricMagenta + '20',
+  },
+  optionsScroll: {
+    marginTop: 12,
+  },
+  optionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  optionText: {
+    fontSize: 14,
+    color: dscvrColors.midnightNavy,
+  },
+  selectedOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: dscvrColors.electricMagenta + '20',
+    borderRadius: 20,
+  },
+  selectedOptionText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: dscvrColors.electricMagenta,
+  },
+  spinButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: dscvrColors.electricMagenta,
+    marginHorizontal: 20,
+    marginTop: 24,
+    marginBottom: 20,
+    paddingVertical: 20,
+    borderRadius: 16,
+    shadowColor: dscvrColors.electricMagenta,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  spinButtonDisabled: {
+    opacity: 0.6,
+  },
+  spinButtonText: {
+    fontSize: 18,
+    fontFamily: FONTS.bold,
+    color: dscvrColors.pureWhite,
+  },
+  resultCard: {
+    backgroundColor: dscvrColors.pureWhite,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  resultTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.semiBold,
+    color: dscvrColors.midnightNavy,
+  },
+  venueName: {
+    fontSize: 24,
+    fontFamily: FONTS.bold,
+    color: dscvrColors.midnightNavy,
+    marginBottom: 4,
+  },
+  venueCategory: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 12,
+  },
+  venueDetails: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 12,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  detailText: {
+    fontSize: 14,
+    color: dscvrColors.midnightNavy,
+  },
+  venueDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  visitButton: {
+    flex: 1,
+    backgroundColor: dscvrColors.electricMagenta,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  visitButtonText: {
+    fontSize: 16,
+    fontFamily: FONTS.semiBold,
+    color: dscvrColors.pureWhite,
+  },
+  shareButton: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 24,
+  },
+  saveButton: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 24,
+  },
+  tryAgainButton: {
+    alignItems: 'center',
+  },
+  tryAgainText: {
+    fontSize: 16,
+    color: dscvrColors.electricMagenta,
+    fontFamily: FONTS.medium,
+  },
+});

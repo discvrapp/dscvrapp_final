@@ -1,0 +1,383 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import SafeAreaView from '../components/SafeAreaView';
+import { FONTS } from '../constants';
+import { addReview } from '../services/firebase';
+
+const dscvrColors = {
+  electricMagenta: '#E500A4',
+  vividBlue: '#375BDD',
+  royalPurple: '#6D4DAD',
+  seafoamTeal: '#66B8BC',
+  midnightNavy: '#0D2D4F',
+  pureWhite: '#FFFFFF',
+};
+
+const amenityOptions = [
+  { id: 'dine-in', label: 'Dine-in', icon: 'restaurant' },
+  { id: 'takeout', label: 'Takeout', icon: 'bag-handle' },
+  { id: 'delivery', label: 'Delivery', icon: 'bicycle' },
+  { id: 'outdoor-seating', label: 'Outdoor Seating', icon: 'umbrella' },
+  { id: 'wifi', label: 'WiFi', icon: 'wifi' },
+  { id: 'parking', label: 'Free Parking', icon: 'car' },
+  { id: 'wheelchair', label: 'Wheelchair Accessible', icon: 'accessibility' },
+  { id: 'bar', label: 'Full Bar', icon: 'wine' },
+  { id: 'live-music', label: 'Live Music', icon: 'musical-notes' },
+  { id: 'pet-friendly', label: 'Pet Friendly', icon: 'paw' },
+  { id: 'kid-friendly', label: 'Kid Friendly', icon: 'people' },
+  { id: 'reservations', label: 'Takes Reservations', icon: 'calendar' },
+];
+
+export default function WriteReviewScreen() {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { placeId, placeName } = route.params as any;
+
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [mediaUris, setMediaUris] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+
+  const toggleAmenity = (amenityId: string) => {
+    setSelectedAmenities(prev =>
+      prev.includes(amenityId)
+        ? prev.filter(id => id !== amenityId)
+        : [...prev, amenityId]
+    );
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaType.Images,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets) {
+      const newUris = result.assets.map(asset => asset.uri);
+      setMediaUris(prev => [...prev, ...newUris].slice(0, 5)); // Max 5 images
+    }
+  };
+
+  const takePhoto = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setMediaUris(prev => [...prev, result.assets[0].uri].slice(0, 5));
+    }
+  };
+
+  const removeMedia = (index: number) => {
+    setMediaUris(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
+    if (rating === 0) {
+      Alert.alert('Please select a rating');
+      return;
+    }
+    if (!reviewText.trim()) {
+      Alert.alert('Please write a review');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await addReview({
+        placeId,
+        placeName,
+        userName: 'User', // TODO: Get from user profile
+        rating,
+        text: reviewText.trim(),
+        amenities: selectedAmenities,
+        mediaUris, // In production, upload these to storage first
+      });
+      
+      Alert.alert('Success', 'Your review has been posted!', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to post review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="close" size={24} color={dscvrColors.midnightNavy} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{placeName}</Text>
+          <TouchableOpacity onPress={handleSubmit} disabled={submitting}>
+            <Text style={[styles.submitText, submitting && styles.submitTextDisabled]}>
+              {submitting ? 'Posting...' : 'Post'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Rating */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Overall Rating</Text>
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => setRating(star)}
+                >
+                  <Ionicons
+                    name="star"
+                    size={36}
+                    color={star <= rating ? dscvrColors.electricMagenta : '#E0E0E0'}
+                    style={styles.star}
+                  />
+                </TouchableOpacity>
+              ))}
+              {rating > 0 && (
+                <Text style={styles.ratingText}>{rating}.0</Text>
+              )}
+            </View>
+          </View>
+
+          {/* Review Text */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Your Review</Text>
+            <TextInput
+              style={styles.reviewInput}
+              placeholder="Share your experience..."
+              multiline
+              numberOfLines={6}
+              value={reviewText}
+              onChangeText={setReviewText}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Media Upload */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Add Photos</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
+              {mediaUris.map((uri, index) => (
+                <View key={index} style={styles.mediaItem}>
+                  <Image source={{ uri }} style={styles.mediaThumbnail} />
+                  <TouchableOpacity
+                    style={styles.removeMedia}
+                    onPress={() => removeMedia(index)}
+                  >
+                    <Ionicons name="close-circle" size={24} color={dscvrColors.electricMagenta} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+              
+              {mediaUris.length < 5 && (
+                <>
+                  <TouchableOpacity style={styles.addMediaButton} onPress={pickImage}>
+                    <Ionicons name="images" size={24} color={dscvrColors.electricMagenta} />
+                    <Text style={styles.addMediaText}>Gallery</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity style={styles.addMediaButton} onPress={() => navigation.navigate("VideoRecord")}>
+                    <Ionicons name="camera" size={24} color={dscvrColors.electricMagenta} />
+                    <Text style={styles.addMediaText}>Camera</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </ScrollView>
+          </View>
+
+          {/* Amenities */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What this place offers</Text>
+            <Text style={styles.sectionSubtitle}>Select all that apply</Text>
+            <View style={styles.amenitiesGrid}>
+              {amenityOptions.map((amenity) => (
+                <TouchableOpacity
+                  key={amenity.id}
+                  style={[
+                    styles.amenityButton,
+                    selectedAmenities.includes(amenity.id) && styles.amenityButtonActive
+                  ]}
+                  onPress={() => toggleAmenity(amenity.id)}
+                >
+                  <Ionicons
+                    name={amenity.icon as any}
+                    size={20}
+                    color={selectedAmenities.includes(amenity.id) ? dscvrColors.pureWhite : dscvrColors.midnightNavy}
+                  />
+                  <Text style={[
+                    styles.amenityLabel,
+                    selectedAmenities.includes(amenity.id) && styles.amenityLabelActive
+                  ]}>{amenity.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Bottom spacing */}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: dscvrColors.pureWhite,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: FONTS.semiBold,
+    color: dscvrColors.midnightNavy,
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 16,
+  },
+  submitText: {
+    fontSize: 16,
+    fontFamily: FONTS.semiBold,
+    color: dscvrColors.electricMagenta,
+  },
+  submitTextDisabled: {
+    opacity: 0.5,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+    color: dscvrColors.midnightNavy,
+    marginBottom: 12,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  star: {
+    marginRight: 4,
+  },
+  ratingText: {
+    fontSize: 24,
+    fontFamily: FONTS.semiBold,
+    color: dscvrColors.electricMagenta,
+    marginLeft: 16,
+  },
+  reviewInput: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    fontFamily: FONTS.regular,
+    minHeight: 120,
+  },
+  mediaScroll: {
+    flexDirection: 'row',
+  },
+  mediaItem: {
+    marginRight: 12,
+    position: 'relative',
+  },
+  mediaThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  removeMedia: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+  },
+  addMediaButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  addMediaText: {
+    fontSize: 12,
+    color: dscvrColors.electricMagenta,
+    marginTop: 4,
+  },
+  amenitiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  amenityButton: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: dscvrColors.pureWhite,
+  },
+  amenityButtonActive: {
+    backgroundColor: dscvrColors.electricMagenta,
+    borderColor: dscvrColors.electricMagenta,
+  },
+  amenityLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FONTS.regular,
+    color: dscvrColors.midnightNavy,
+  },
+  amenityLabelActive: {
+    color: dscvrColors.pureWhite,
+  },
+});

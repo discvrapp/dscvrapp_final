@@ -1,0 +1,9 @@
+// Add this import at the top
+import PlanMyNightScreen from '../screens/PlanMyNightScreen';
+
+// Add this inside your Stack.Navigator
+<Stack.Screen 
+  name="PlanMyNight" 
+  component={PlanMyNightScreen} 
+  options={{ headerShown: false }}
+/>
