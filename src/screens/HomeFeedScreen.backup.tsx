@@ -305,7 +305,7 @@ export default function HomeFeedScreen() {
 
         {/* Top Bar */}
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Explore', { screen: 'Search' })}>
             <Ionicons name="search" size={28} color="white" />
           </TouchableOpacity>
           

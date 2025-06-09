@@ -158,7 +158,7 @@ export default function ExploreScreen() {
     } else if (category.id === 'disco') {
       navigation.navigate('Disco');
     } else if (category.id === 'events') {
-      navigation.navigate('Events');
+      navigation.navigate('Explore', { screen: 'Events' });
     } else {
       navigation.navigate('SearchResults', {
         query: category.query,
@@ -317,7 +317,7 @@ export default function ExploreScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.collectionsContainer}
           >
-            <TouchableOpacity style={styles.collectionCard}>
+            <TouchableOpacity style={styles.collectionCard} onPress={() => navigation.navigate('CollectionDetail', { collectionId: 'date-night' })}>
               <View style={[styles.collectionGradient, { backgroundColor: dscvrColors.electricMagenta }]}>
                 <Ionicons name="wine-outline" size={32} color={dscvrColors.pureWhite} />
               </View>
@@ -325,7 +325,7 @@ export default function ExploreScreen() {
               <Text style={styles.collectionCount}>24 spots</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.collectionCard}>
+            <TouchableOpacity style={styles.collectionCard} onPress={() => navigation.navigate('CollectionDetail', { collectionId: 'date-night' })}>
               <View style={[styles.collectionGradient, { backgroundColor: dscvrColors.vividBlue }]}>
                 <Ionicons name="cafe-outline" size={32} color={dscvrColors.pureWhite} />
               </View>
@@ -333,7 +333,7 @@ export default function ExploreScreen() {
               <Text style={styles.collectionCount}>18 spots</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.collectionCard}>
+            <TouchableOpacity style={styles.collectionCard} onPress={() => navigation.navigate('CollectionDetail', { collectionId: 'date-night' })}>
               <View style={[styles.collectionGradient, { backgroundColor: dscvrColors.seafoamTeal }]}>
                 <Ionicons name="leaf-outline" size={32} color={dscvrColors.pureWhite} />
               </View>
