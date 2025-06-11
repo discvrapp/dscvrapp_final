@@ -1,4 +1,3 @@
-import { initializeApp } from 'firebase/app';
 import { 
   getFirestore, 
   collection, 
@@ -8,19 +7,7 @@ import {
   getDocs,
   Timestamp 
 } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBpYiFc_AU9078oITdrLUZJVzar6fodiNE",
-  authDomain: "dscvr-app.firebaseapp.com",
-  projectId: "dscvr-app",
-  storageBucket: "dscvr-app.firebasestorage.app",
-  messagingSenderId: "501064753061",
-  appId: "1:501064753061:web:cf42a5fbd318bad411124c",
-  measurementId: "G-9M5Y3XCELB"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+import { app } from '../firebase/firebaseConfig';
 
 // Initialize Firestore
 export const db = getFirestore(app);
@@ -29,19 +16,36 @@ export const db = getFirestore(app);
 export const addReview = async (review: {
   placeId: string;
   placeName: string;
+  userId: string;
   userName: string;
   rating: number;
   text: string;
-  userId?: string;
+  images?: string[];
+  video?: string;
+  amenities?: any[];
+  reviewType: string;
+  createdAt: string;
 }) => {
   try {
-    const docRef = await addDoc(collection(db, 'reviews'), {
-      ...review,
-      createdAt: Timestamp.now(),
+    console.log("Firebase addReview called with:", review);
+    const docRef = await addDoc(collection(db, "reviews"), {
+      placeId: review.placeId,
+      placeName: review.placeName,
+      userId: review.userId,
+      userName: review.userName,
+      rating: review.rating,
+      text: review.text,
+      images: review.images || [],
+
+
+      amenities: review.amenities || [],
+      reviewType: review.reviewType,
+      ...(review.video && { video: review.video }),      createdAt: Timestamp.now(),
     });
+    console.log("Document written with ID: ", docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error('Error adding review:', error);
+    console.error("Error adding review:", error);
     throw error;
   }
 };

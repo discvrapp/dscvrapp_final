@@ -1,33 +1,46 @@
 {
   "expo": {
-    "name": "dscvr-v4",
+    "name": "DSCVR",
     "slug": "dscvr-v4",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "bundleIdentifier": "com.dscvr.app",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to record videos and take photos for reviews.",
+        "NSMicrophoneUsageDescription": "This app uses the microphone to record audio with videos.",
+        "NSLocationWhenInUseUsageDescription": "This app uses location to show nearby places and events.",
+        "NSPhotoLibraryUsageDescription": "This app accesses your photo library to select images for reviews.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "plugins": [
-      "expo-font",
-      "expo-web-browser"
-    ]
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow DSCVR to access your camera to record videos and take photos."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow DSCVR to use your location to show nearby places."
+        }
+      ],
+      "expo-image-picker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3a633950-7c1c-40b7-8914-de46a849fc02"
+      }
+    }
   }
 }

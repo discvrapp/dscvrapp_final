@@ -3,12 +3,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import DscvrLogo from '../components/DscvrLogo';
-
 // Screens
 import HomeFeedScreen from '../screens/HomeFeedScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import MessagesScreen from '../screens/MessagesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import MessageChatScreen from '../screens/MessageChatScreen';import ProfileScreen from '../screens/ProfileScreen';
 import PlaceDetailScreen from '../screens/PlaceDetailScreen';
 import AllReviewsScreen from '../screens/AllReviewsScreen';
 import WriteReviewScreen from '../screens/WriteReviewScreen';
@@ -36,7 +35,6 @@ import EventReservationScreen from '../screens/EventReservationScreen';const dsc
   midnightNavy: '#0D2D4F',
   pureWhite: '#FFFFFF',
 };
-
 // Stack Navigators
 const HomeStack = createNativeStackNavigator();
 const ExploreStack = createNativeStackNavigator();
@@ -44,7 +42,6 @@ const CreateStack = createNativeStackNavigator();
 const MessagesStack = createNativeStackNavigator();
 const ProfileStack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
 function HomeStackScreen() {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
@@ -58,7 +55,6 @@ function HomeStackScreen() {
     </HomeStack.Navigator>
   );
 }
-
 function ExploreStackScreen() {
   return (
     <ExploreStack.Navigator screenOptions={{ headerShown: false }}>
@@ -81,7 +77,6 @@ function ExploreStackScreen() {
     </ExploreStack.Navigator>
   );
 }
-
 function CreateStackScreen() {
   return (
     <CreateStack.Navigator screenOptions={{ headerShown: false }}>
@@ -90,15 +85,14 @@ function CreateStackScreen() {
     </CreateStack.Navigator>
   );
 }
-
 function MessagesStackScreen() {
   return (
     <MessagesStack.Navigator screenOptions={{ headerShown: false }}>
       <MessagesStack.Screen name="MessagesMain" component={MessagesScreen} />
+      <MessagesStack.Screen name="MessageChat" component={MessageChatScreen} />
     </MessagesStack.Navigator>
   );
 }
-
 function ProfileStackScreen() {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
@@ -110,7 +104,6 @@ function ProfileStackScreen() {
     </ProfileStack.Navigator>
   );
 }
-
 export default function AppNavigator() {
   return (
     <Tab.Navigator
